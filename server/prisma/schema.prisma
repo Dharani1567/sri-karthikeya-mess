@@ -1,0 +1,152 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  ADMIN
+  OWNER
+  MANAGER
+  STAFF
+  CUSTOMER
+}
+
+model User {
+  id           String         @id @default(uuid())
+  username     String         @unique
+  name         String
+  email        String?        @unique
+  passwordHash String
+  role         Role           @default(ADMIN)
+  refreshTokens RefreshToken[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model Company {
+  id           String            @id @default(uuid())
+  name         String            @unique
+  gstin        String
+  address      String?
+  billingCycle String            @default("Monthly (Consolidated)") // "Monthly (Consolidated)", "Weekly"
+  status       String            @default("ACTIVE") // ACTIVE, INACTIVE
+  customRates  CompanyMealRate[]
+  supplyLogs   SupplyLog[]
+  invoices     Invoice[]
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+}
+
+model MealType {
+  id           String            @id @default(uuid())
+  code         String            @unique // e.g. VEG, CHK, MUT, FSH, PRW, SPC
+  name         String            // e.g. Veg Meal, Chicken Meal, Mutton Meal, Fish Meal, Prawns Special, Special Meal (Sweets)
+  ledgerCode   String            @default("GEN") // 3-letter ledger code e.g. MBD, CHK, VEG
+  defaultPrice Float
+  status       String            @default("ACTIVE") // ACTIVE, INACTIVE
+  displayOrder Int               @default(0)
+  customRates  CompanyMealRate[]
+  supplyItems  SupplyItem[]
+  invoiceItems InvoiceItem[]
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+}
+
+model CompanyMealRate {
+  id          String   @id @default(uuid())
+  companyId   String
+  mealTypeId  String
+  customPrice Float
+  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  mealType    MealType @relation(fields: [mealTypeId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([companyId, mealTypeId])
+}
+
+model SupplyLog {
+  id            String       @id @default(uuid())
+  companyId     String
+  deliveryDate  String       // Format YYYY-MM-DD
+  status        String       @default("SUBMITTED") // DRAFT, SUBMITTED
+  totalQuantity Int          @default(0)
+  totalAmount   Float        @default(0)
+  notes         String?
+  company       Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  items         SupplyItem[]
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@unique([companyId, deliveryDate])
+}
+
+model SupplyItem {
+  id          String    @id @default(uuid())
+  supplyLogId String
+  mealTypeId  String
+  quantity    Int       @default(0)
+  unitPrice   Float     @default(0)
+  totalAmount Float     @default(0)
+  supplyLog   SupplyLog @relation(fields: [supplyLogId], references: [id], onDelete: Cascade)
+  mealType    MealType  @relation(fields: [mealTypeId], references: [id], onDelete: Cascade)
+}
+
+model Invoice {
+  id            String        @id @default(uuid())
+  invoiceNumber String        @unique // e.g. MESS-2026-02-01 or #SKDM-2026-02-01
+  companyId     String
+  monthPeriod   String        // Format YYYY-MM
+  startDate     String        // YYYY-MM-DD
+  endDate       String        // YYYY-MM-DD
+  subtotal      Float         @default(0)
+  cgstRate      Float         @default(2.5)
+  sgstRate      Float         @default(2.5)
+  cgstAmount    Float         @default(0)
+  sgstAmount    Float         @default(0)
+  totalAmount   Float         @default(0)
+  status        String        @default("UNPAID") // DRAFT, UNPAID, PAID, CANCELLED
+  issuedDate    String        // YYYY-MM-DD
+  company       Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  items         InvoiceItem[]
+  payments      Payment[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model InvoiceItem {
+  id            String    @id @default(uuid())
+  invoiceId     String
+  mealTypeId    String?
+  mealTypeName  String
+  totalQuantity Int       @default(0)
+  rate          Float     @default(0)
+  totalAmount   Float     @default(0)
+  invoice       Invoice   @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  mealType      MealType? @relation(fields: [mealTypeId], references: [id], onDelete: SetNull)
+}
+
+model Payment {
+  id            String   @id @default(uuid())
+  invoiceId     String
+  amount        Float
+  paymentDate   String   // YYYY-MM-DD
+  paymentMethod String   @default("Bank Transfer") // Bank Transfer, UPI, Cash, Cheque
+  referenceNo   String?
+  notes         String?
+  invoice       Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  createdAt     DateTime @default(now())
+}

@@ -1,0 +1,16 @@
+{
+  "short_name": "Karthikeya Mess",
+  "name": "Sri Karthikeya Deluxe Mess - Meal Management",
+  "icons": [
+    {
+      "src": "favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#FFFBE1",
+  "theme_color": "#C62828",
+  "display": "standalone",
+  "orientation": "portrait"
+}

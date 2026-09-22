@@ -1,0 +1,24 @@
+# Render Deployment Configuration (Infrastructure as Code)
+services:
+  - type: web
+    name: sri-karthikeya-mess-api
+    env: node
+    region: oregon
+    plan: starter
+    rootDir: server
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_REFRESH_SECRET
+        sync: false
+      - key: CORS_ORIGIN
+        value: https://sri-karthikeya-mess.vercel.app

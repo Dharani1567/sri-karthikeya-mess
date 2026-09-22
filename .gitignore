@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+client/node_modules/
+server/node_modules/
+
+# Production builds
+client/dist/
+server/dist/
+
+# Local databases & logs
+server/prisma/*.db
+server/prisma/*.db-journal
+*.log
+
+# Environment variables
+.env
+.env.local
+server/.env
+client/.env
+
+# OS & Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
