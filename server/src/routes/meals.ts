@@ -1,11 +1,11 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 
 const router = Router();
 const prisma = new PrismaClient();
 
 // GET /api/meal-types - List all master meal categories
-router.get('/', async (req, res) => {
+router.get('/', async (req: Request, res: Response) => {
   try {
     const mealTypes = await prisma.mealType.findMany({
       orderBy: { displayOrder: 'asc' },
@@ -17,7 +17,7 @@ router.get('/', async (req, res) => {
 });
 
 // POST /api/meal-types - Create new custom meal category
-router.post('/', async (req, res) => {
+router.post('/', async (req: Request, res: Response) => {
   try {
     const { name, code, ledgerCode, defaultPrice } = req.body;
 
@@ -56,7 +56,7 @@ router.post('/', async (req, res) => {
 });
 
 // PUT /api/meal-types/:id - Update meal category
-router.put('/:id', async (req, res) => {
+router.put('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { name, ledgerCode, defaultPrice, status, displayOrder } = req.body;

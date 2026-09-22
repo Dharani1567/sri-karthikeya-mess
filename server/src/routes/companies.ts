@@ -1,11 +1,11 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 
 const router = Router();
 const prisma = new PrismaClient();
 
 // GET /api/companies - List all corporate partners with custom rates
-router.get('/', async (req, res) => {
+router.get('/', async (req: Request, res: Response) => {
   try {
     const companies = await prisma.company.findMany({
       include: {
@@ -22,7 +22,7 @@ router.get('/', async (req, res) => {
 });
 
 // POST /api/companies - Create new corporate partner
-router.post('/', async (req, res) => {
+router.post('/', async (req: Request, res: Response) => {
   try {
     const { name, gstin, address, billingCycle, rates } = req.body;
 
@@ -70,7 +70,7 @@ router.post('/', async (req, res) => {
 });
 
 // PUT /api/companies/:id - Update company & rates
-router.put('/:id', async (req, res) => {
+router.put('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { name, gstin, address, billingCycle, status, rates } = req.body;
@@ -119,7 +119,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // DELETE /api/companies/:id - Remove corporate partner
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     await prisma.company.delete({

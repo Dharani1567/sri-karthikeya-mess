@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import * as XLSX from 'xlsx';
 
@@ -6,7 +6,7 @@ const router = Router();
 const prisma = new PrismaClient();
 
 // GET /api/reports/analytics - Executive Analytics KPIs & Weekly Supply Trends
-router.get('/analytics', async (req, res) => {
+router.get('/analytics', async (req: Request, res: Response) => {
   try {
     const { companyId = 'all', range = 'Last 30 Days' } = req.query;
 
@@ -29,7 +29,7 @@ router.get('/analytics', async (req, res) => {
     const companyTotals: Record<string, { name: string; qty: number; rev: number }> = {};
     const mealCategoryTotals: Record<string, number> = {};
 
-    logs.forEach((log) => {
+    logs.forEach((log: any) => {
       totalQuantity += log.totalQuantity;
       totalRevenue += log.totalAmount;
 
@@ -40,7 +40,7 @@ router.get('/analytics', async (req, res) => {
       companyTotals[compName].qty += log.totalQuantity;
       companyTotals[compName].rev += log.totalAmount;
 
-      log.items.forEach((it) => {
+      log.items.forEach((it: any) => {
         const cCode = it.mealType.name;
         mealCategoryTotals[cCode] = (mealCategoryTotals[cCode] || 0) + it.quantity;
       });
@@ -49,7 +49,6 @@ router.get('/analytics', async (req, res) => {
     const activeCompaniesCount = await prisma.company.count({ where: { status: 'ACTIVE' } });
     const pendingInvoicesCount = await prisma.invoice.count({ where: { status: 'UNPAID' } });
 
-    // Weekly aggregated trends for chart visualization
     const weeklyTrends = [
       { week: 'W1', supply: Math.round(totalQuantity * 0.2) || 7200 },
       { week: 'W2', supply: Math.round(totalQuantity * 0.28) || 9800 },
@@ -75,7 +74,7 @@ router.get('/analytics', async (req, res) => {
 });
 
 // GET /api/reports/export - Download Supply History in Excel (.xlsx) format
-router.get('/export', async (req, res) => {
+router.get('/export', async (req: Request, res: Response) => {
   try {
     const logs = await prisma.supplyLog.findMany({
       include: {
@@ -85,9 +84,9 @@ router.get('/export', async (req, res) => {
       orderBy: { deliveryDate: 'desc' },
     });
 
-    const exportRows = logs.map((log) => {
+    const exportRows = logs.map((log: any) => {
       const itemSummary: Record<string, number> = {};
-      log.items.forEach((it) => {
+      log.items.forEach((it: any) => {
         itemSummary[it.mealType.name] = it.quantity;
       });
 

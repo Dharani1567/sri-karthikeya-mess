@@ -11,6 +11,9 @@
     "start:server": "npm --prefix server run start",
     "db:seed": "npm --prefix server run db:seed"
   },
+  "dependencies": {
+    "typescript": "^5.3.3"
+  },
   "keywords": ["mess-management", "catering", "invoicing", "react", "express", "prisma"],
   "author": "Antigravity",
   "license": "MIT"

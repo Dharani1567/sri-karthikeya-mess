@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import PDFDocument from 'pdfkit';
 
@@ -6,7 +6,7 @@ const router = Router();
 const prisma = new PrismaClient();
 
 // GET /api/invoices - List monthly invoices with metrics summary
-router.get('/', async (req, res) => {
+router.get('/', async (req: Request, res: Response) => {
   try {
     const { monthPeriod = '2026-02', status, companyId } = req.query;
 
@@ -31,7 +31,6 @@ router.get('/', async (req, res) => {
       orderBy: { createdAt: 'desc' },
     });
 
-    // Metrics summary
     const allInvoices = await prisma.invoice.findMany({
       where: monthPeriod && monthPeriod !== 'all' ? { monthPeriod: monthPeriod as string } : {},
     });
@@ -40,7 +39,7 @@ router.get('/', async (req, res) => {
     let paidAmount = 0;
     let pendingReceivables = 0;
 
-    allInvoices.forEach((inv) => {
+    allInvoices.forEach((inv: any) => {
       totalMonthlyDraft += inv.totalAmount;
       if (inv.status === 'PAID') {
         paidAmount += inv.totalAmount;
@@ -63,7 +62,7 @@ router.get('/', async (req, res) => {
 });
 
 // GET /api/invoices/:id - Detailed invoice view
-router.get('/:id', async (req, res) => {
+router.get('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const invoice = await prisma.invoice.findUnique({
@@ -86,19 +85,18 @@ router.get('/:id', async (req, res) => {
 });
 
 // POST /api/invoices/generate-all - Batch generate monthly corporate invoices
-router.post('/generate-all', async (req, res) => {
+router.post('/generate-all', async (req: Request, res: Response) => {
   try {
     const { monthPeriod = '2026-02', startDate = '2026-02-01', endDate = '2026-02-28' } = req.body;
 
     const companies = await prisma.company.findMany({ where: { status: 'ACTIVE' } });
-    const generated = [];
+    const generated: any[] = [];
 
     let count = await prisma.invoice.count({
       where: { monthPeriod },
     });
 
     for (const comp of companies) {
-      // Find all supply logs for this company in date range
       const logs = await prisma.supplyLog.findMany({
         where: {
           companyId: comp.id,
@@ -114,11 +112,10 @@ router.post('/generate-all', async (req, res) => {
 
       if (logs.length === 0) continue;
 
-      // Group totals by meal type
       const mealTypeMap: Record<string, { name: string; mealTypeId: string; totalQty: number; rate: number }> = {};
 
-      logs.forEach((log) => {
-        log.items.forEach((it) => {
+      logs.forEach((log: any) => {
+        log.items.forEach((it: any) => {
           const key = it.mealTypeId;
           if (!mealTypeMap[key]) {
             mealTypeMap[key] = {
@@ -188,7 +185,7 @@ router.post('/generate-all', async (req, res) => {
 });
 
 // POST /api/invoices/:id/payment - Record payment for invoice
-router.post('/:id/payment', async (req, res) => {
+router.post('/:id/payment', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { amount, paymentDate, paymentMethod = 'Bank Transfer', referenceNo, notes } = req.body;
@@ -221,7 +218,7 @@ router.post('/:id/payment', async (req, res) => {
 });
 
 // GET /api/invoices/:id/pdf - PDF Invoice Download Stream
-router.get('/:id/pdf', async (req, res) => {
+router.get('/:id/pdf', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const invoice = await prisma.invoice.findUnique({
@@ -238,32 +235,28 @@ router.get('/:id/pdf', async (req, res) => {
 
     doc.pipe(res);
 
-    // Header Branding
     doc.fillColor('#C62828').fontSize(20).text('Sri Karthikeya Deluxe Mess', { align: 'center' });
     doc.fillColor('#485563').fontSize(10).text('Corporate Catering & Bulk Meal Supply', { align: 'center' });
     doc.text('GSTIN: 33AAAFS2491M1ZS', { align: 'center' });
     doc.moveDown(1.5);
 
-    // Title & Invoice Info
     doc.fillColor('#1F2937').fontSize(16).text('TAX INVOICE', { underline: true });
     doc.fontSize(10).text(`Invoice No: ${invoice.invoiceNumber}`);
     doc.text(`Date: ${invoice.issuedDate}`);
     doc.text(`Period: ${invoice.startDate} to ${invoice.endDate}`);
     doc.moveDown();
 
-    // Bill To & Supplier Details
     doc.fillColor('#C62828').fontSize(12).text('BILL TO:');
     doc.fillColor('#1F2937').fontSize(10).text(invoice.company.name);
     doc.text(`Address: ${invoice.company.address || 'N/A'}`);
     doc.text(`GSTIN: ${invoice.company.gstin}`);
     doc.moveDown(1.5);
 
-    // Items Table Header
     doc.fillColor('#C62828').fontSize(11).text('Meal Category              Qty          Rate (Rs)       Total (Rs)');
     doc.text('-------------------------------------------------------------------');
     doc.fillColor('#1F2937').fontSize(10);
 
-    invoice.items.forEach((item) => {
+    invoice.items.forEach((item: any) => {
       const line = `${item.mealTypeName.padEnd(26)} ${String(item.totalQuantity).padEnd(12)} ${String(item.rate).padEnd(15)} Rs.${item.totalAmount.toLocaleString('en-IN')}`;
       doc.text(line);
     });

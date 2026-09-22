@@ -1,11 +1,11 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 
 const router = Router();
 const prisma = new PrismaClient();
 
 // GET /api/supply-logs - Filtered historical delivery logs
-router.get('/', async (req, res) => {
+router.get('/', async (req: Request, res: Response) => {
   try {
     const { companyId, dateRange, search, mealTypeId, page = '1', limit = '20' } = req.query;
 
@@ -69,16 +69,15 @@ router.get('/', async (req, res) => {
 });
 
 // GET /api/supply-logs/today - Today's supply standings across all clients
-router.get('/today-standings', async (req, res) => {
+router.get('/today-standings', async (req: Request, res: Response) => {
   try {
-    const todayStr = new Date().toISOString().split('T')[0]; // YYYY-MM-DD or default mock date '2026-02-26'
     const targetDate = (req.query.date as string) || '2026-02-26';
 
     const companies = await prisma.company.findMany({
       where: { status: 'ACTIVE' },
     });
 
-    const standings = [];
+    const standings: any[] = [];
 
     for (const comp of companies) {
       const log = await prisma.supplyLog.findUnique({
@@ -97,7 +96,7 @@ router.get('/today-standings', async (req, res) => {
 
       const itemMap: Record<string, number> = {};
       if (log && log.items) {
-        log.items.forEach((it) => {
+        log.items.forEach((it: any) => {
           itemMap[it.mealType.code] = it.quantity;
         });
       }
@@ -119,7 +118,7 @@ router.get('/today-standings', async (req, res) => {
 
     res.json({
       date: targetDate,
-      allDispatched: standings.every((s) => s.status === 'Delivered'),
+      allDispatched: standings.every((s: any) => s.status === 'Delivered'),
       standings,
     });
   } catch (error) {
@@ -128,7 +127,7 @@ router.get('/today-standings', async (req, res) => {
 });
 
 // GET /api/supply-logs/single - Fetch log for specific company & date
-router.get('/single', async (req, res) => {
+router.get('/single', async (req: Request, res: Response) => {
   try {
     const { companyId, date } = req.query;
     if (!companyId || !date) {
@@ -156,7 +155,7 @@ router.get('/single', async (req, res) => {
 });
 
 // POST /api/supply-logs/single - Save/Submit single daily meal entry
-router.post('/single', async (req, res) => {
+router.post('/single', async (req: Request, res: Response) => {
   try {
     const { companyId, date, quantities, notes, status = 'SUBMITTED' } = req.body;
 
@@ -164,23 +163,21 @@ router.post('/single', async (req, res) => {
       return res.status(400).json({ message: 'companyId, date and quantities are required' });
     }
 
-    // Fetch custom rates for this company
     const customRates = await prisma.companyMealRate.findMany({
       where: { companyId },
     });
     const customRateMap: Record<string, number> = {};
-    customRates.forEach((cr) => {
+    customRates.forEach((cr: any) => {
       customRateMap[cr.mealTypeId] = cr.customPrice;
     });
 
-    // Fetch active meal types
     const mealTypes = await prisma.mealType.findMany({
       where: { status: 'ACTIVE' },
     });
 
     let totalQty = 0;
     let totalAmt = 0;
-    const itemsToCreate = [];
+    const itemsToCreate: any[] = [];
 
     for (const mt of mealTypes) {
       const qty = Number(quantities[mt.id] || quantities[mt.code] || 0);
@@ -198,7 +195,6 @@ router.post('/single', async (req, res) => {
       }
     }
 
-    // Upsert SupplyLog
     const existing = await prisma.supplyLog.findUnique({
       where: {
         companyId_deliveryDate: {
@@ -209,7 +205,6 @@ router.post('/single', async (req, res) => {
     });
 
     if (existing) {
-      // Delete old items and recreate
       await prisma.supplyItem.deleteMany({ where: { supplyLogId: existing.id } });
       const updated = await prisma.supplyLog.update({
         where: { id: existing.id },
@@ -245,10 +240,9 @@ router.post('/single', async (req, res) => {
 });
 
 // POST /api/supply-logs/bulk - Spreadsheet-style bulk back-date entry
-router.post('/bulk', async (req, res) => {
+router.post('/bulk', async (req: Request, res: Response) => {
   try {
     const { companyId, entries } = req.body;
-    // entries is an array of { date: 'YYYY-MM-DD', quantities: { [mealTypeId/code]: number } }
 
     if (!companyId || !Array.isArray(entries)) {
       return res.status(400).json({ message: 'companyId and entries array are required' });
@@ -256,13 +250,13 @@ router.post('/bulk', async (req, res) => {
 
     const customRates = await prisma.companyMealRate.findMany({ where: { companyId } });
     const customRateMap: Record<string, number> = {};
-    customRates.forEach((cr) => {
+    customRates.forEach((cr: any) => {
       customRateMap[cr.mealTypeId] = cr.customPrice;
     });
 
     const mealTypes = await prisma.mealType.findMany({ where: { status: 'ACTIVE' } });
 
-    const results = [];
+    const results: any[] = [];
 
     for (const entry of entries) {
       const { date, quantities } = entry;
@@ -270,7 +264,7 @@ router.post('/bulk', async (req, res) => {
 
       let totalQty = 0;
       let totalAmt = 0;
-      const itemsToCreate = [];
+      const itemsToCreate: any[] = [];
 
       for (const mt of mealTypes) {
         const qty = Number(quantities[mt.id] || quantities[mt.code] || 0);
@@ -329,7 +323,7 @@ router.post('/bulk', async (req, res) => {
 });
 
 // GET /api/supply-logs/unsubmitted - Find missing unsubmitted dates in range
-router.get('/unsubmitted-dates', async (req, res) => {
+router.get('/unsubmitted-dates', async (req: Request, res: Response) => {
   try {
     const { companyId, startDate, endDate } = req.query;
     if (!companyId || !startDate || !endDate) {
@@ -354,7 +348,7 @@ router.get('/unsubmitted-dates', async (req, res) => {
       select: { deliveryDate: true },
     });
 
-    const existingSet = new Set(existingLogs.map((l) => l.deliveryDate));
+    const existingSet = new Set(existingLogs.map((l: any) => l.deliveryDate));
     const missingDates = dateList.filter((d) => !existingSet.has(d));
 
     res.json({
