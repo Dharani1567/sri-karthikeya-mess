@@ -2,19 +2,33 @@
   "name": "sri-karthikeya-mess-management-system",
   "version": "1.0.0",
   "description": "Production-ready meal supply management system for Sri Karthikeya Deluxe Mess",
+  "private": true,
+  "workspaces": [
+    "server",
+    "client"
+  ],
   "scripts": {
     "dev:server": "npm --prefix server run dev",
     "dev:client": "npm --prefix client run dev",
-    "build:server": "npm --prefix server run build",
-    "build:client": "npm --prefix client run build",
+    "build:server": "cd server && npm install && npm run build",
+    "build:client": "cd client && npm install && npm run build",
     "build": "npm run build:server && npm run build:client",
     "start:server": "npm --prefix server run start",
     "db:seed": "npm --prefix server run db:seed"
   },
   "dependencies": {
+    "@prisma/client": "^5.10.0",
+    "prisma": "^5.10.0",
     "typescript": "^5.3.3"
   },
-  "keywords": ["mess-management", "catering", "invoicing", "react", "express", "prisma"],
+  "keywords": [
+    "mess-management",
+    "catering",
+    "invoicing",
+    "react",
+    "express",
+    "prisma"
+  ],
   "author": "Antigravity",
   "license": "MIT"
 }

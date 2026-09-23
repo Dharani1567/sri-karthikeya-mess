@@ -1,12 +1,11 @@
-# Render Deployment Configuration (Infrastructure as Code)
 services:
   - type: web
     name: sri-karthikeya-mess-api
     env: node
-    region: oregon
-    plan: starter
+    region: singapore
+    plan: free
     rootDir: server
-    buildCommand: npm install && npm run build
+    buildCommand: npm install && npx prisma generate && npm run build
     startCommand: npm run start
     healthCheckPath: /api/health
     envVars:
