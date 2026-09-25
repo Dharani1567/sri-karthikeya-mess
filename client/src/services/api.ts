@@ -1,6 +1,6 @@
 import { Company, MealType, SupplyLog, TodayStanding, Invoice, AnalyticsData } from '../types';
 
-const API_BASE = '/api';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
 
 const getHeaders = () => {
   const token = localStorage.getItem('mess_auth_token');
