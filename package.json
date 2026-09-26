@@ -3,19 +3,16 @@
   "version": "1.0.0",
   "description": "Production-ready meal supply management system for Sri Karthikeya Deluxe Mess",
   "private": true,
-  "workspaces": [
-    "server",
-    "client"
-  ],
   "scripts": {
     "dev:server": "npm --prefix server run dev",
     "dev:client": "npm --prefix client run dev",
-    "build:server": "cd server && npm install && npm run build",
-    "build:client": "cd client && npm install && npm run build",
-    "build": "cd server && npm install && npm run build",
-    "start": "cd server && npm run start",
-    "start:server": "cd server && npm run start",
-    "db:seed": "npm --prefix server run db:seed"
+    "build:server": "npm --prefix server run build",
+    "build:client": "npm --prefix client run build",
+    "build": "npm --prefix server run build",
+    "start": "npm --prefix server run start",
+    "start:server": "npm --prefix server run start",
+    "db:seed": "npm --prefix server run db:seed",
+    "postinstall": "npm --prefix server install"
   },
   "dependencies": {
     "@prisma/client": "^5.10.0",
